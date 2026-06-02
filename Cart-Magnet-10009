@@ -1,0 +1,144 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local player = Players.LocalPlayer
+
+local HIGH_GRAVITY = 2000
+local RADIUS = 18
+local TRACK_NAMES = {"Wheel", "Flange"}
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "CartMagnetGui"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 200, 0, 150)
+frame.Position = UDim2.new(0, 20, 0, 120)
+frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
+frame.ClipsDescendants = true
+
+local corner = Instance.new("UICorner", frame)
+corner.CornerRadius = UDim.new(0, 10)
+
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, 0, 0, 30)
+title.Text = "Cart Magnet"
+title.BackgroundTransparency = 1
+title.TextColor3 = Color3.new(1,1,1)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 16
+
+local toggleStateBtn = Instance.new("TextButton", frame)
+toggleStateBtn.Size = UDim2.new(0, 25, 0, 25)
+toggleStateBtn.Position = UDim2.new(1, -30, 0, 2)
+toggleStateBtn.BackgroundColor3 = Color3.fromRGB(60, 120, 200)
+toggleStateBtn.TextColor3 = Color3.new(1,1,1)
+toggleStateBtn.Text = "-"
+toggleStateBtn.Font = Enum.Font.GothamBold
+local btnCorner = Instance.new("UICorner", toggleStateBtn)
+btnCorner.CornerRadius = UDim.new(0, 6)
+
+local toggleBtn = Instance.new("TextButton", frame)
+toggleBtn.Size = UDim2.new(1, -20, 0, 40)
+toggleBtn.Position = UDim2.new(0, 10, 0, 40)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(120, 70, 70)
+toggleBtn.TextColor3 = Color3.new(1,1,1)
+toggleBtn.Font = Enum.Font.GothamBold
+toggleBtn.TextSize = 16
+toggleBtn.Text = "Off"
+
+local inputField = Instance.new("TextBox", frame)
+inputField.Size = UDim2.new(1, -20, 0, 40)
+inputField.Position = UDim2.new(0, 10, 0, 90)
+inputField.PlaceholderText = "Lực bám"
+inputField.Text = tostring(HIGH_GRAVITY)
+inputField.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+inputField.TextColor3 = Color3.new(1,1,1)
+inputField.Font = Enum.Font.Gotham
+inputField.TextSize = 16
+
+local highlights = {}
+local isOn = false
+local isMinimized = false
+
+local function applyPartGravity(part, g)
+    local att = part:FindFirstChild("GravityAttachment") or Instance.new("Attachment", part)
+    att.Name = "GravityAttachment"
+    local vf = part:FindFirstChild("CustomGravity") or Instance.new("VectorForce", part)
+    vf.Name = "CustomGravity"
+    vf.Attachment0 = att
+    vf.RelativeTo = Enum.ActuatorRelativeTo.World
+    vf.Force = Vector3.new(0, -part:GetMass() * g, 0)
+end
+
+local function resetPartGravity(part)
+    local vf = part:FindFirstChild("CustomGravity")
+    if vf then vf:Destroy() end
+    local att = part:FindFirstChild("GravityAttachment")
+    if att then att:Destroy() end
+end
+
+toggleStateBtn.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+    if isMinimized then
+        frame:TweenSize(UDim2.new(0, 200, 0, 30), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2)
+        toggleStateBtn.Text = "+"
+    else
+        frame:TweenSize(UDim2.new(0, 200, 0, 150), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2)
+        toggleStateBtn.Text = "-"
+    end
+end)
+
+toggleBtn.MouseButton1Click:Connect(function()
+    isOn = not isOn
+    toggleBtn.BackgroundColor3 = isOn and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(120, 70, 70)
+    toggleBtn.Text = isOn and "On" or "Off"
+end)
+
+RunService.Heartbeat:Connect(function()
+    if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then return end
+    
+    local currentForce = tonumber(inputField.Text) or HIGH_GRAVITY
+    local nearbyParts = Workspace:GetPartBoundsInRadius(player.Character.HumanoidRootPart.Position, RADIUS)
+    local currentFound = {}
+
+    for _, part in pairs(nearbyParts) do
+        if part:IsA("BasePart") then
+            for _, name in pairs(TRACK_NAMES) do
+                if part.Name == name then
+                    currentFound[part] = true
+                    if isOn then
+                        applyPartGravity(part, currentForce)
+                        if not highlights[part] then
+                            local hl = Instance.new("Highlight", part)
+                            hl.FillColor = Color3.fromRGB(0, 255, 0)
+                            highlights[part] = hl
+                        end
+                    else
+                        resetPartGravity(part)
+                        if highlights[part] then highlights[part]:Destroy(); highlights[part] = nil end
+                    end
+                end
+            end
+        end
+    end
+    
+    for part, hl in pairs(highlights) do
+        if not currentFound[part] then
+            resetPartGravity(part)
+            hl:Destroy()
+            highlights[part] = nil
+        end
+    end
+end)
+
+player.CharacterAdded:Connect(function()
+    for part, hl in pairs(highlights) do
+        hl:Destroy()
+    end
+    highlights = {}
+end)
