@@ -6,6 +6,11 @@ local player = Players.LocalPlayer
 local HIGH_GRAVITY = 2000
 local RADIUS = 18
 local TRACK_NAMES = {"Wheel", "Flange"}
+local CLICK_SOUND_ID = "rbxassetid://12221967"
+
+local sound = Instance.new("Sound")
+sound.SoundId = CLICK_SOUND_ID
+sound.Parent = Workspace
 
 local gui = Instance.new("ScreenGui")
 gui.Name = "CartMagnetGui"
@@ -83,6 +88,7 @@ local function resetPartGravity(part)
 end
 
 toggleStateBtn.MouseButton1Click:Connect(function()
+    sound:Play()
     isMinimized = not isMinimized
     if isMinimized then
         frame:TweenSize(UDim2.new(0, 200, 0, 30), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2)
@@ -94,6 +100,7 @@ toggleStateBtn.MouseButton1Click:Connect(function()
 end)
 
 toggleBtn.MouseButton1Click:Connect(function()
+    sound:Play()
     isOn = not isOn
     toggleBtn.BackgroundColor3 = isOn and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(120, 70, 70)
     toggleBtn.Text = isOn and "On" or "Off"
