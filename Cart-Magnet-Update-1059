@@ -1,7 +1,12 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
+local StarterGui = game:GetService("StarterGui")
 local player = Players.LocalPlayer
+
+if player.PlayerGui:FindFirstChild("CartMagnetGui") then
+    player.PlayerGui.CartMagnetGui:Destroy()
+end
 
 local HIGH_GRAVITY = 2000
 local RADIUS = 18
@@ -149,3 +154,14 @@ player.CharacterAdded:Connect(function()
     end
     highlights = {}
 end)
+
+local TARGET_PLACE_ID = 10660791703
+if game.PlaceId ~= TARGET_PLACE_ID then
+    player:Kick("This script is not for this game. =(")
+else
+    StarterGui:SetCore("SendNotification", {
+        Title = "Cart Magnet",
+        Text = "Script is ready! Have fun playing. ✓",
+        Duration = 5
+    })
+end
