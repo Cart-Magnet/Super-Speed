@@ -48,6 +48,7 @@ toggleStateBtn.Position = UDim2.new(1, -30, 0, 2)
 toggleStateBtn.BackgroundColor3 = Color3.fromRGB(60, 120, 200)
 toggleStateBtn.TextColor3 = Color3.new(1,1,1)
 toggleStateBtn.Text = "-"
+toggleStateBtn.TextSize = 22
 toggleStateBtn.Font = Enum.Font.GothamBold
 local btnCorner = Instance.new("UICorner", toggleStateBtn)
 btnCorner.CornerRadius = UDim.new(0, 6)
@@ -127,7 +128,7 @@ RunService.Heartbeat:Connect(function()
                         applyPartGravity(part, currentForce)
                         if not highlights[part] then
                             local hl = Instance.new("Highlight", part)
-                            hl.FillColor = Color3.fromRGB(0, 255, 0)
+                            hl.FillColor = Color3.fromRGB(50, 200, 255)
                             highlights[part] = hl
                         end
                     else
